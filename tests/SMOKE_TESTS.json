@@ -1,0 +1,32 @@
+{
+  "10 à 15' facile": {
+    "rendered": "- 15m",
+    "expected_fragment": "- 15m",
+    "ok": true
+  },
+  "8 à 10' à 4'45-4'55/km": {
+    "rendered": "- 10m 4:45-4:55 Pace",
+    "expected_fragment": "- 10m 4:45-4:55 Pace",
+    "ok": true
+  },
+  "3 x 10\" relâchées": {
+    "rendered": "3x\n- 10s",
+    "expected_fragment": "3x",
+    "ok": true
+  },
+  "60 à 75' Z2 basse : 145-175 W": {
+    "rendered": "- 75m 145-175w",
+    "expected_fragment": "- 75m 145-175w",
+    "ok": true
+  },
+  "1000 mètres à 4'00/km": {
+    "rendered": "- 1km 4:00 Pace",
+    "expected_fragment": "- 1km 4:00 Pace",
+    "ok": true
+  },
+  "45' Z2": {
+    "rendered": "- 45m Z2",
+    "expected_fragment": "- 45m Z2",
+    "ok": true
+  }
+}

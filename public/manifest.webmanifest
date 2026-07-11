@@ -1,0 +1,8 @@
+{
+  "name": "Workout Sync",
+  "short_name": "WorkoutSync",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f2f2f2",
+  "theme_color": "#d8742a"
+}

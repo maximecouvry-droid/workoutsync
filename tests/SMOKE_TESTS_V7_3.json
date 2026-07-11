@@ -1,0 +1,17 @@
+{
+  "3 x 10' à 4'05-4'10/km Récupération 3' facile": {
+    "rendered": "3x\n- 10m 4:05-4:10 Pace\n- 3m",
+    "expected": "3x\n- 10m 4:05-4:10 Pace\n- 3m",
+    "ok": true
+  },
+  "4 x 20\" relâchées, récupération 1'": {
+    "rendered": "4x\n- 20s\n- 1m",
+    "expected": "4x\n- 20s\n- 1m",
+    "ok": true
+  },
+  "5 x 1000 m à 3'50/km, récupération 2'": {
+    "rendered": "5x\n- 1km 3:50 Pace\n- 2m",
+    "expected": "5x\n- 1km 3:50 Pace\n- 2m",
+    "ok": true
+  }
+}

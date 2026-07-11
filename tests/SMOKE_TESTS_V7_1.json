@@ -1,0 +1,26 @@
+{
+  "3 x 10\" relâchées": {
+    "rendered": "3x\n- 10s\n- 10s",
+    "expected": "3x\n- 10s\n- 10s",
+    "warning": null,
+    "ok": true
+  },
+  "5 x 20\" vélocité": {
+    "rendered": "5x\n- 20s\n- 20s",
+    "expected": "5x\n- 20s\n- 20s",
+    "warning": null,
+    "ok": true
+  },
+  "5 x 3'": {
+    "rendered": "5x\n- 3m",
+    "expected": "5x\n- 3m",
+    "warning": "Récupération non précisée : aucune récupération ajoutée.",
+    "ok": true
+  },
+  "8 x 200 m": {
+    "rendered": "8x\n- 0.2km",
+    "expected": "8x\n- 0.2km",
+    "warning": "Récupération non précisée : aucune récupération ajoutée.",
+    "ok": true
+  }
+}
