@@ -989,9 +989,12 @@ def run_rule_repeat_time_inline_recovery(line, profile):
 
 def run_rule_repeat_time_pace(line, profile):
     m = re.fullmatch(
-        r"(?P<count>\d+)\s*x\s*(?P<dur>\d+)\s*(?P<unit>'|min|m|s|\")"
-        r".*?(?:à|a|@)\s*(?P<p1>\d+(?:[':]\d{1,2}|['’]))"
+        r"(?P<count>\d+)\s*x\s*"
+        r"(?P<dur>\d+)\s*(?P<unit>'|’|min|m|s|\")"
+        r".*?(?:à|a|@)\s*"
+        r"(?P<p1>\d+(?:[':]\d{1,2}|['’]))"
         r"(?:\s*-\s*(?P<p2>\d+(?:[':]\d{1,2}|['’])))?"
+        r"(?:\s*/?\s*km)?"
         r"(?:\s+.*)?",
         line,
         flags=re.I,
