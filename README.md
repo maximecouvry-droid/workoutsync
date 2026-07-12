@@ -1,48 +1,20 @@
-# Workout Sync — PWA v0.2
+# Workout Sync — PWA v0.4
 
-Cette version transforme la base initiale en première interface réellement utilisable.
+## Corrections
 
-## Fonctionnalités
+- compilation automatique dès qu’une séance est sélectionnée ;
+- bouton de régénération conservé pour les modifications manuelles ;
+- diagnostic visible de l’appel `/api/compile` ;
+- erreur explicite si l’API renvoie du HTML, une réponse vide ou aucun script ;
+- `moving_time` repris depuis le parseur Python ;
+- lancement local corrigé avec `py -3 -m api.local_server`.
 
-- identifiants mémorisés localement dans le navigateur ;
-- réglages FTP, puissance IM et allures ;
-- chargement des séances Notion `Status = To do` ;
-- exclusion de la natation ;
-- ajout manuel d’une séance ;
-- sélection multiple ;
-- édition locale du texte source, du script et du payload ;
-- compilation par le parseur Python existant ;
-- validation vert / bleu / orange / rouge ;
-- blocage de l’envoi en présence d’une ligne rouge ;
-- envoi groupé vers Intervals.icu ;
-- passage de Notion à `Sync` après envoi ;
-- PWA installable sur Windows et Android ;
-- onglet d’aide Syntaxe Intervals.
-
-## Lancer localement
+## Lancement
 
 ```powershell
-npm install
-npm run dev
+py -3 -m pip install -r requirements.txt
+npm.cmd install
+npm.cmd run dev
 ```
 
-Ouvrir ensuite :
-
-```text
-http://localhost:3000
-```
-
-## Mettre à jour le dépôt GitHub
-
-Après avoir remplacé le contenu du dossier local par cette version :
-
-```powershell
-git add .
-git commit -m "Build usable PWA interface"
-git push
-```
-
-## Déploiement Vercel
-
-Importer le dépôt GitHub dans Vercel. Aucun secret serveur n’est requis :
-les identifiants restent stockés dans le navigateur de chaque appareil.
+Puis ouvrir `http://127.0.0.1:3000`.

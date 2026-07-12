@@ -78,7 +78,9 @@ button.ghostLight { color: var(--white); background: transparent; border-color: 
 }
 
 .toolbarSpacer { flex: 1; }
+.statusBlock { display: grid; gap: 2px; text-align: right; }
 .status { color: var(--muted); white-space: nowrap; font-size: 14px; }
+.diagnostic { color: #8a4b1c; font-size: 11px; max-width: 520px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .workspace {
   display: grid;
@@ -356,6 +358,7 @@ button.ghostLight { color: var(--white); background: transparent; border-color: 
   .heroActions button { flex: 1; }
   .toolbar { align-items: stretch; flex-wrap: wrap; }
   .toolbar button { flex: 1 1 180px; }
+  .statusBlock { width: 100%; text-align: left; }
   .status { width: 100%; }
   .workspace { padding: 10px; }
   .sessionRow { grid-template-columns: 24px 62px 76px 1fr; }

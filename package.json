@@ -1,9 +1,11 @@
 {
   "name": "workoutsync",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "concurrently -k -n API,WEB -c magenta,cyan \"py -3 -m api.local_server\" \"next dev\"",
+    "dev:api": "py -3 -m api.local_server",
+    "dev:web": "next dev",
     "build": "next build",
     "start": "next start"
   },
@@ -16,6 +18,7 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "typescript": "^5"
+    "typescript": "^5",
+    "concurrently": "^9.1.2"
   }
 }

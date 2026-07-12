@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Credentials = {
   notionToken: string;
@@ -154,6 +154,8 @@ export default function Home() {
   const [busy, setBusy] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
+  const [diagnostic, setDiagnostic] = useState("");
+  const autoCompileRef = useRef<string | null>(null);
 
   useEffect(() => {
     const savedCredentials = window.localStorage.getItem(CREDENTIALS_KEY);
@@ -178,6 +180,40 @@ export default function Home() {
   const selectedStats = stats(selected?.records);
   const allChecked = sessions.length > 0 && sessions.every((session) => session.checked);
 
+  useEffect(() => {
+    if (!selected || selected.script || busy) return;
+    if (autoCompileRef.current === selected.localId) return;
+
+    autoCompileRef.current = selected.localId;
+    let cancelled = false;
+
+    (async () => {
+      setBusy(true);
+      setMessage(`Compilation automatique de « ${selected.name} »…`);
+      try {
+        const compiled = await compileSession(selected);
+        if (cancelled) return;
+        setSessions((current) =>
+          current.map((session) =>
+            session.localId === compiled.localId ? compiled : session
+          )
+        );
+        setMessage("Compilation terminée");
+      } catch (error) {
+        if (cancelled) return;
+        const msg = error instanceof Error ? error.message : "Erreur de compilation";
+        setMessage(msg);
+        setDiagnostic(msg);
+      } finally {
+        if (!cancelled) setBusy(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedId]);
+
   function patchSelected(patch: Partial<Session>) {
     if (!selectedId) return;
     setSessions((current) =>
@@ -185,6 +221,18 @@ export default function Home() {
         session.localId === selectedId ? { ...session, ...patch } : session
       )
     );
+  }
+
+  async function readJsonResponse(response: Response) {
+    const raw = await response.text();
+    try {
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      const preview = raw.slice(0, 240).replace(/\s+/g, " " );
+      throw new Error(
+        `Réponse non JSON (${response.status}) depuis ${response.url}: ${preview || "réponse vide"}`
+      );
+    }
   }
 
   function saveSettings() {
@@ -211,7 +259,7 @@ export default function Home() {
           database_id: credentials.databaseId,
         }),
       });
-      const data = await response.json();
+      const data = await readJsonResponse(response);
       if (!response.ok) throw new Error(data.error ?? "Erreur Notion");
 
       const manual = sessions.filter((session) => session.sourceType === "manual");
@@ -219,6 +267,7 @@ export default function Home() {
         .map((page: any, index: number) => notionToSession(page, index))
         .filter(Boolean) as Session[];
 
+      autoCompileRef.current = null;
       setSessions([...manual, ...notion]);
       setSelectedId(manual[0]?.localId ?? notion[0]?.localId ?? null);
       setMessage(`${notion.length} séance(s) Notion chargée(s), natation exclue`);
@@ -230,16 +279,33 @@ export default function Home() {
   }
 
   async function compileSession(session: Session, useCurrentEdits = true): Promise<Session> {
-    const details = useCurrentEdits ? session.editedDetails ?? session.details : session.details;
+    const details = (useCurrentEdits ? session.editedDetails ?? session.details : session.details).trim();
+    if (!details) throw new Error(`Aucun détail à compiler pour « ${session.name} »`);
+
+    setDiagnostic(
+      `POST /api/compile — ${session.sport} — ${details.length} caractères`
+    );
+
     const response = await fetch("/api/compile", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      cache: "no-store",
       body: JSON.stringify({ sport: session.sport, details, profile }),
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error ?? "Erreur de compilation");
+    const data = await readJsonResponse(response);
+    if (!response.ok) throw new Error(data.error ?? `Erreur de compilation HTTP ${response.status}`);
+    if (typeof data.script !== "string" || !data.script.trim()) {
+      throw new Error("L’API a répondu sans script compilé");
+    }
 
-    const event = buildEvent(session, data.script);
+    const event = {
+      ...buildEvent(session, data.script),
+      ...(data.moving_time ? { moving_time: data.moving_time } : {}),
+    };
+    setDiagnostic(
+      `Compilation OK — ${data.records?.length ?? 0} ligne(s) analysée(s) — ${data.script.length} caractères de script`
+    );
+
     return {
       ...session,
       editedDetails: details,
@@ -251,6 +317,7 @@ export default function Home() {
 
   async function compileSelected() {
     if (!selected) return;
+    autoCompileRef.current = selected.localId;
     setBusy(true);
     setMessage("Compilation…");
     try {
@@ -319,7 +386,7 @@ export default function Home() {
           events,
         }),
       });
-      const data = await response.json();
+      const data = await readJsonResponse(response);
       if (!response.ok) throw new Error(data.error ?? "Erreur Intervals");
 
       for (const session of compiled) {
@@ -400,7 +467,10 @@ export default function Home() {
           Actualiser payload
         </button>
         <span className="toolbarSpacer" />
-        <span className="status">{busy ? "Traitement…" : message}</span>
+        <div className="statusBlock">
+          <span className="status">{busy ? "Traitement…" : message}</span>
+          {diagnostic && <span className="diagnostic">{diagnostic}</span>}
+        </div>
       </nav>
 
       <section className="workspace">
@@ -428,7 +498,10 @@ export default function Home() {
               <button
                 key={session.localId}
                 className={`sessionRow ${session.localId === selectedId ? "selected" : ""}`}
-                onClick={() => setSelectedId(session.localId)}
+                onClick={() => {
+                  autoCompileRef.current = null;
+                  setSelectedId(session.localId);
+                }}
               >
                 <input
                   type="checkbox"
