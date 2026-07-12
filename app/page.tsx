@@ -389,24 +389,42 @@ export default function Home() {
       const data = await readJsonResponse(response);
       if (!response.ok) throw new Error(data.error ?? "Erreur Intervals");
 
-      for (const session of compiled) {
-        if (session.sourceType === "notion" && session.pageId) {
-          await fetch("/api/notion/status", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              token: credentials.notionToken,
-              page_id: session.pageId,
-            }),
-          });
-        }
-      }
+      const syncedNotionIds = new Set<string>();
 
+for (const session of compiled) {
+  if (session.sourceType !== "notion" || !session.pageId) {
+    continue;
+  }
+
+  const notionResponse = await fetch("/api/notion/status", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+    body: JSON.stringify({
+      token: credentials.notionToken,
+      page_id: session.pageId,
+    }),
+  });
+
+  const notionData = await readJsonResponse(notionResponse);
+
+  if (!notionResponse.ok) {
+    throw new Error(
+      notionData.error ??
+        `Séance envoyée à Intervals, mais échec de la mise à jour Notion pour « ${session.name} »`
+    );
+  }
+
+  syncedNotionIds.add(session.localId);
+}
       setSessions((current) =>
         current
           .map((session) => compiled.find((item) => item.localId === session.localId) ?? session)
-          .filter((session) => !checked.some((item) => item.localId === session.localId && item.sourceType === "notion"))
-      );
+.filter(
+  (session) =>
+    session.sourceType !== "notion" ||
+    !syncedNotionIds.has(session.localId)
+)      );
       setSelectedId(null);
       setMessage(`${events.length} séance(s) envoyée(s)`);
     } catch (error) {
