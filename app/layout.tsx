@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   title: "Workout Sync",
   description: "Notion vers Intervals.icu et Garmin",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/favicon-32.png",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {
