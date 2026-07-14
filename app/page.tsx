@@ -457,9 +457,7 @@ for (const session of compiled) {
     <main>
       <header className="hero">
         <div>
-          <p className="eyebrow">WORKOUT SYNC</p>
-          <h1>Notion → Intervals.icu → Garmin</h1>
-          <p className="subtitle">Même moteur Python, nouvelle interface web installable.</p>
+          <h1>Workout Sync</h1>
         </div>
         <div className="heroActions">
           <button className="ghostLight" onClick={() => setSettingsOpen(true)}>
