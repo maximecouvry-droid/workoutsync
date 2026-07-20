@@ -299,11 +299,21 @@ button.ghostLight { color: var(--white); background: transparent; border-color: 
 .formGrid input,
 .formGrid select,
 .formGrid textarea,
-.profileField input {
+.profileField input,
+.profileFieldSimple input {
   min-height: 42px;
   border: 1px solid var(--border);
   padding: 9px 10px;
 }
+
+.profileFieldSimple {
+  display: grid;
+  grid-template-columns: 1fr 130px auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.profileFieldSimple span { color: var(--muted); font-size: 12px; }
 
 .formGrid textarea { min-height: 260px; resize: vertical; }
 
@@ -364,4 +374,5 @@ button.ghostLight { color: var(--white); background: transparent; border-color: 
   .sessionRow { grid-template-columns: 24px 62px 76px 1fr; }
   .profileField { grid-template-columns: 1fr 1fr; }
   .profileField span { display: none; }
+  .profileFieldSimple { grid-template-columns: 1fr; }
 }

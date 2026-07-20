@@ -24,6 +24,7 @@ type Profile = {
   threshold_pace: string;
   threshold_pace_pct_enabled: boolean;
   threshold_pace_pct: number;
+  slow_pace_threshold: string;
 };
 
 type ValidationRecord = {
@@ -73,6 +74,7 @@ const defaultProfile: Profile = {
   threshold_pace: "3:55",
   threshold_pace_pct_enabled: true,
   threshold_pace_pct: 2,
+  slow_pace_threshold: "5:00",
 };
 
 function textProperty(property: any): string {
@@ -133,6 +135,30 @@ function buildEvent(session: Session, script: string) {
     description: script,
     external_id: session.sessionId,
   };
+}
+
+function paceStringToSeconds(value: string): number | null {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
+  if (!match) return null;
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
+function stripSlowPaces(script: string, thresholdSeconds: number): string {
+  return script
+    .split("\n")
+    .map((line) =>
+      line
+        .replace(
+          /\s*\b(\d{1,2}):(\d{2})(?:-(\d{1,2}):(\d{2}))?\s*Pace\b/gi,
+          (match, m1, s1, m2, s2) => {
+            const low = Number(m1) * 60 + Number(s1);
+            const high = m2 !== undefined ? Number(m2) * 60 + Number(s2) : low;
+            return Math.max(low, high) > thresholdSeconds ? "" : match;
+          }
+        )
+        .replace(/[ \t]+$/, "")
+    )
+    .join("\n");
 }
 
 function stats(records: ValidationRecord[] = []) {
@@ -340,6 +366,40 @@ export default function Home() {
     setMessage("Payload actualisé depuis le script");
   }
 
+  async function clearSlowPacesChecked() {
+    const checked = sessions.filter((session) => session.checked);
+    if (!checked.length) {
+      setMessage("Coche au moins une séance");
+      return;
+    }
+    const thresholdSeconds = paceStringToSeconds(profile.slow_pace_threshold);
+    if (thresholdSeconds === null) {
+      setMessage("Seuil d’allure invalide dans Réglages (format M:SS)");
+      setSettingsOpen(true);
+      return;
+    }
+
+    setBusy(true);
+    setMessage(`Nettoyage des allures lentes sur ${checked.length} séance(s)…`);
+    try {
+      const updated: Session[] = [];
+      for (const session of checked) {
+        const base = session.script ? session : await compileSession(session);
+        const script = stripSlowPaces(base.script ?? "", thresholdSeconds);
+        const event = buildEvent(base, script);
+        updated.push({ ...base, script, payload: JSON.stringify([event], null, 2) });
+      }
+      setSessions((current) =>
+        current.map((session) => updated.find((item) => item.localId === session.localId) ?? session)
+      );
+      setMessage(`Allures > ${profile.slow_pace_threshold}/km effacées sur ${updated.length} séance(s)`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Erreur lors du nettoyage des allures");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function sendChecked() {
     const checked = sessions.filter((session) => session.checked);
     if (!checked.length) {
@@ -481,6 +541,12 @@ for (const session of compiled) {
         </button>
         <button onClick={regeneratePayload} disabled={!selected?.script}>
           Actualiser payload
+        </button>
+        <button
+          onClick={clearSlowPacesChecked}
+          disabled={busy || !sessions.some((session) => session.checked)}
+        >
+          Effacer allures &gt; {profile.slow_pace_threshold}/km
         </button>
         <span className="toolbarSpacer" />
         <div className="statusBlock">
@@ -747,6 +813,14 @@ function SettingsModal({
             <ProfileField label="Allure EF" value={profile.ef_pace} pct={profile.ef_pace_pct} onValue={(value) => onProfile({ ...profile, ef_pace: value })} onPct={(value) => onProfile({ ...profile, ef_pace_pct: Number(value) })} />
             <ProfileField label="Allure marathon" value={profile.marathon_pace} pct={profile.marathon_pace_pct} onValue={(value) => onProfile({ ...profile, marathon_pace: value })} onPct={(value) => onProfile({ ...profile, marathon_pace_pct: Number(value) })} />
             <ProfileField label="Allure seuil" value={profile.threshold_pace} pct={profile.threshold_pace_pct} onValue={(value) => onProfile({ ...profile, threshold_pace: value })} onPct={(value) => onProfile({ ...profile, threshold_pace_pct: Number(value) })} />
+            <div className="profileFieldSimple">
+              <strong>Seuil « allures lentes »</strong>
+              <input
+                value={profile.slow_pace_threshold}
+                onChange={(event) => onProfile({ ...profile, slow_pace_threshold: event.target.value })}
+              />
+              <span>min/km — utilisé par le bouton « Effacer allures »</span>
+            </div>
           </div>
         )}
 
